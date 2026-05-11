@@ -145,9 +145,25 @@ const createId = () =>
   `tool-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
 export default function ToolForm() {
-  const [tools, setTools] = useState<ToolFormItem[]>(() => [
-    buildDefaultTool("tool-1"),
-  ]);
+  const [tools, setTools] = useState<ToolFormItem[]>(() => {
+    if (typeof window === "undefined") {
+      return [buildDefaultTool("tool-1")];
+    }
+
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return [buildDefaultTool("tool-1")];
+
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((item, index) => hydrateTool(item, index));
+      }
+    } catch {
+      return [buildDefaultTool("tool-1")];
+    }
+
+    return [buildDefaultTool("tool-1")];
+  });
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [auditInput, setAuditInput] = useState<AuditRequestInput | null>(null);
@@ -171,19 +187,6 @@ export default function ToolForm() {
       })),
     []
   );
-
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return;
-    try {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        setTools(parsed.map((item, index) => hydrateTool(item, index)));
-      }
-    } catch {
-      setTools([buildDefaultTool("tool-1")]);
-    }
-  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tools));
@@ -375,7 +378,14 @@ export default function ToolForm() {
     event.preventDefault();
 
     const payload = {
-      tools: tools.map(({ id, priceOverridden, ...rest }) => rest),
+      tools: tools.map((tool) => ({
+        toolKey: tool.toolKey,
+        usageType: tool.usageType,
+        planId: tool.planId,
+        monthlySpend: tool.monthlySpend,
+        teamSize: tool.teamSize,
+        primaryUseCase: tool.primaryUseCase,
+      })),
     };
 
     const result = auditRequestSchema.safeParse(payload);

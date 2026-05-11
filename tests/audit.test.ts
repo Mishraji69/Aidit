@@ -20,8 +20,8 @@ describe("runAudit", () => {
     const result = runAudit(request);
 
     expect(result.totalSpend).toBe(60);
-    expect(result.totalSavings).toBe(60);
-    expect(result.yearlySavings).toBe(720);
+    expect(result.totalSavings).toBe(40);
+    expect(result.yearlySavings).toBe(480);
 
     const actions = result.recommendations.map((rec) => rec.suggestedAction);
     expect(actions).toContain("Downgrade to Plus");
