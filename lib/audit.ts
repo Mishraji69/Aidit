@@ -136,11 +136,15 @@ const selectPrimaryRecommendation = (
 const rankRecommendations = (
   recommendations: AuditRecommendation[],
   primary: AuditRecommendation | null
-) =>
-  recommendations.map((recommendation) => ({
-    ...recommendation,
-    priority: recommendation === primary ? "primary" : "alternative",
-  }));
+): AuditRecommendation[] =>
+  recommendations.map((recommendation) => {
+    const priority: AuditRecommendation["priority"] =
+      recommendation === primary ? "primary" : "alternative";
+    return {
+      ...recommendation,
+      priority,
+    };
+  });
 
 export const runAudit = (request: AuditRequest): AuditResult => {
   const recommendations: AuditRecommendation[] = [];
